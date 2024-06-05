@@ -1,6 +1,7 @@
 from django.contrib import admin
 from account.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from .models import Product
 
 
 class UserModelAdmin(BaseUserAdmin):
@@ -32,4 +33,9 @@ class UserModelAdmin(BaseUserAdmin):
 
 # Now register the new UserAdmin...
 admin.site.register(User, UserModelAdmin)
+
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['id', 'title', 'selling_price', 'marked_price', 'description', 'composition', 'prodapp', 'category', 'product_image']
 

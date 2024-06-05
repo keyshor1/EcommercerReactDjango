@@ -74,3 +74,29 @@ class User(AbstractBaseUser):
         "Is the user a member of staff?"
         # Simplest possible answer: All admins are staff
         return self.is_admin
+    
+
+
+CATEGORY_CHOICES=(
+    ('BF','Breakfast'),
+    ('LH','Lunch'),
+    ('DN','Dinner'),
+    ('DT','Desert'),
+    ('DR','Drinks'),
+    ('PT','Platter'),
+    ('FF','Fast Food'),
+    ('PD','Popular Dishes'),
+    ('NA', 'New Arrivals')
+)
+
+class Product(models.Model):
+    title = models.CharField(max_length=100)
+    selling_price = models.FloatField()
+    marked_price = models.FloatField()
+    description = models.TextField()
+    composition = models.TextField(default='')
+    prodapp = models.TextField(default='')
+    category = models.CharField(choices=CATEGORY_CHOICES, max_length=2)
+    product_image = models.ImageField(upload_to='product')
+    def __str__(self):
+        return str(self.id)

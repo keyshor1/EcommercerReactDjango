@@ -1,11 +1,12 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from account.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, UserChangePasswordSerializer, SendPasswordResetEmailSerializer, UserPasswordResetSerializer
+from account.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, UserChangePasswordSerializer, SendPasswordResetEmailSerializer, UserPasswordResetSerializer, ProductSerializer, ProductDetailSerializer, CategorySerializer
 from django.contrib.auth import authenticate
 from account.renderers import UserRenderer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
+from account.models import Product
 
 # Create token manually 
 def get_tokens_for_user(user):
@@ -78,3 +79,32 @@ class UserPasswordResetView(APIView):
         if serializer.is_valid(raise_exception=True):
             return Response({'msg': 'password reset is successfulll'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class ProductView(APIView):
+    renderer_classes = [UserRenderer]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        productview = Product.objects.all()
+        serializer = ProductSerializer(productview, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ProductDetailView(APIView):
+    renderer_classes = [UserRenderer]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk, format=None):
+        id=pk
+        productdetailview = Product.objects.get(id=id)
+        serializer = ProductDetailSerializer(productdetailview)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class CategoryView(APIView):
+    renderer_classes = [UserRenderer]
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, val, format=None):
+        categoryview = Product.objects.filter(category=val)
+        # title = Product.objects.get(category=val).values('title')
+        serializer = CategorySerializer(categoryview, many=True)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
