@@ -140,10 +140,16 @@ class AddCartView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
-    # def patch(self, request, pk, format=None):
-    #     cartid = Cart.objects.get(id=pk)
-    #     cart
-        
+    def patch(self, request, *args, **kwargs):
+        # Retrieve id from URL parameters
+        cart_id = kwargs['pk']
+        cart = Cart.objects.get(id=cart_id)
+        data = request.data.get('quantity')
+        serializer = AddCartSerializer(cart, data={'quantity': data}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ShowCartView(APIView):
     permission_classes = [IsAuthenticated]
