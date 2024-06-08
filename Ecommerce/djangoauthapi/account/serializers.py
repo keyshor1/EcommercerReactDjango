@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from account.models import User, Product
+from account.models import User, Product, Cart
 from django.utils.encoding import smart_str, force_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -129,4 +129,16 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
+        fields = '__all__'
+
+class AddCartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'product', 'quantity']
+        read_only_fields = ['id', 'user', 'product']
+
+class ShowCartSerializer(serializers.ModelSerializer):
+    product = ProductSerializer()
+    class Meta:
+        model = Cart
         fields = '__all__'

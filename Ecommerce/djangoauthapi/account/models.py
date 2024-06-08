@@ -99,4 +99,14 @@ class Product(models.Model):
     category = models.CharField(choices=CATEGORY_CHOICES, max_length=2)
     product_image = models.ImageField(upload_to='product')
     def __str__(self):
-        return str(self.id)
+        return str(self.title)
+    
+    
+class Cart(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    product = models.ForeignKey(Product,on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1) 
+    
+    def __str__(self):
+        return str(self.user)
+    

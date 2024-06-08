@@ -1,12 +1,12 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from account.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, UserChangePasswordSerializer, SendPasswordResetEmailSerializer, UserPasswordResetSerializer, ProductSerializer, ProductDetailSerializer, CategorySerializer
+from account.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, UserChangePasswordSerializer, SendPasswordResetEmailSerializer, UserPasswordResetSerializer, ProductSerializer, ProductDetailSerializer, CategorySerializer, AddCartSerializer, ShowCartSerializer
 from django.contrib.auth import authenticate
 from account.renderers import UserRenderer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-from account.models import Product
+from account.models import Product, Cart
 
 # Create token manually 
 def get_tokens_for_user(user):
@@ -108,3 +108,48 @@ class CategoryView(APIView):
         # title = Product.objects.get(category=val).values('title')
         serializer = CategorySerializer(categoryview, many=True)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+    
+# class CartView(APIView):
+#     def post(self, request, format=None):
+#         user = request.user
+#         product_id = request.data.get('product_id')
+#         product = Product.objects.filter(id=product_id)
+#         quantity = request.data.get('quantity', 1)
+#         cart_items = {user, product, quantity}
+#         serializer = CartSerializer(cart_items, many=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+class AddCartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        user = request.user
+        product_id = request.data.get('product_id')
+        quantity = request.data.get('quantity', 1)
+        try:
+            # Assuming there's only one product with the given id
+            cart_item, created = Cart.objects.get_or_create(user=user, product_id=product_id)
+            if not created:
+                cart_item.quantity += int(quantity)
+                cart_item.save()
+            serializer = AddCartSerializer(cart_item)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+    # def patch(self, request, pk, format=None):
+    #     cartid = Cart.objects.get(id=pk)
+    #     cart
+        
+
+class ShowCartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user
+        cart_data = Cart.objects.filter(user=user)
+        serializer = ShowCartSerializer(cart_data, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
