@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from account.models import User, Product, Cart
+from account.models import User, Product, Cart, Address, OrderPlaced
 from django.utils.encoding import smart_str, force_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -141,4 +141,14 @@ class ShowCartSerializer(serializers.ModelSerializer):
     product = ProductSerializer()
     class Meta:
         model = Cart
+        fields = '__all__'
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = '__all__'
+
+class OrderPlacedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderPlaced
         fields = '__all__'

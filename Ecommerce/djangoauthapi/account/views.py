@@ -1,12 +1,12 @@
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from account.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, UserChangePasswordSerializer, SendPasswordResetEmailSerializer, UserPasswordResetSerializer, ProductSerializer, ProductDetailSerializer, CategorySerializer, AddCartSerializer, ShowCartSerializer
+from account.serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, UserChangePasswordSerializer, SendPasswordResetEmailSerializer, UserPasswordResetSerializer, ProductSerializer, ProductDetailSerializer, CategorySerializer, AddCartSerializer, ShowCartSerializer, AddressSerializer, OrderPlacedSerializer
 from django.contrib.auth import authenticate
 from account.renderers import UserRenderer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-from account.models import Product, Cart
+from account.models import Address, Product, Cart, OrderPlaced
 
 # Create token manually 
 def get_tokens_for_user(user):
@@ -157,5 +157,81 @@ class ShowCartView(APIView):
     def get(self, request, format=None):
         user = request.user
         cart_data = Cart.objects.filter(user=user)
+        amount = 0
+        for cart in cart_data:
+            value = cart.quantity * cart.product.selling_price
+            amount = amount +  value
+        totalamount = amount + 100
         serializer = ShowCartSerializer(cart_data, many=True)
+        context={
+            "cart_data": serializer.data,
+            "amount": amount,
+            "totalamount": totalamount
+            }
+        return Response(context, status=status.HTTP_200_OK)
+    
+    
+class AddressView(APIView):
+    renderer_classes = [UserRenderer]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        user= request.user
+        address_detail = Address.objects.filter(user=user)
+        # print(address_detail)
+        serializer = AddressSerializer(address_detail, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+            
+    def post(self, request, format=None):
+        user = request.user
+        address_data = {
+            'user': user.id,
+            'sender_name': request.data.get('sender_name'),
+            'receiver_name': request.data.get('receiver_name'),
+            'receiver_email': request.data.get('receiver_email'),
+            'state': request.data.get('state'),
+            'city': request.data.get('city'),
+            'locality': request.data.get('locality'),
+            'sender_number': request.data.get('sender_number'),
+            'receiver_number': request.data.get('receiver_number')
+        }
+        serializer = AddressSerializer(data=address_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'msg': 'Address Updated'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    # def post(self, request, format=None):
+    #     user = request.user
+    #     sender_name =  request.data.get('sender_name')
+    #     receiver_name = request.data.get('receiver_name')
+    #     receiver_email = request.data.get('receiver_email')
+    #     state = request.data.get('state')
+    #     city = request.data.get('city')
+    #     locality = request.data.get('locality')
+    #     sender_number = request.data.get('sender_number')
+    #     receiver_number = request.data.get('receiver_number')
+    #     address_data = Address.objects.create(user=user, sender_name=sender_name, receiver_name=receiver_name, receiver_email=receiver_email, state=state, city=city, locality=locality, sender_number=sender_number, receiver_number=receiver_number)
+    #     serializer = AddressSerializer(data = address_data)
+    #     if serializer.is_valid():
+    #         return Response({'msg': 'Address Updated'}, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class OrderPlacedView(APIView):
+    renderer_classes = [UserRenderer]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        user= request.user
+        address_id = request.data.get('address_id')
+        cart = Cart.objects.filter(user=user)
+        for c in cart:
+            order_placed = OrderPlaced(user=user, address_id=address_id, product=c.product, quantity=c.quantity ).save()
+            c.delete()
+        serializer = OrderPlacedSerializer(order_placed, many=True)
+        if serializer.is_valid():
+            print(serializer.data)
+            Response( serializer.data, status=status.HTTP_201_CREATED)
+
+
+

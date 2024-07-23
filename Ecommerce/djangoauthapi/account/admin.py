@@ -1,7 +1,7 @@
 from django.contrib import admin
 from account.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Product, Cart
+from .models import Product, Cart, Address, OrderPlaced
 
 
 class UserModelAdmin(BaseUserAdmin):
@@ -43,3 +43,10 @@ class ProductAdmin(admin.ModelAdmin):
 class CartAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'product', 'quantity']
 
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'sender_name', 'receiver_name', 'receiver_email', 'state', 'city', 'locality', 'sender_number', 'receiver_number']
+
+@admin.register(OrderPlaced)
+class OrderPlacedAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'address', 'product', 'quantity', 'ordered_date', 'status']
